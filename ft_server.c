@@ -6,7 +6,7 @@
 /*   By: jikarunw <jikarunw@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 21:00:23 by jikarunw          #+#    #+#             */
-/*   Updated: 2023/10/21 00:59:37 by jikarunw         ###   ########.fr       */
+/*   Updated: 2023/10/21 15:40:28 by jikarunw         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,13 +14,13 @@
 
 t_signal	g_signal;
 
-static void	ft_process_signal_data(int sig, siginfo_t *info, void *other)
+static void	handle_signal_data(int signal, siginfo_t *info, void *context)
 {
 	pid_t	client_pid;
 
-	(void) other;
+	(void) context;
 	client_pid = info->si_pid;
-	if (sig == SIGUSR1)
+	if (signal == SIGUSR1)
 		g_signal.current_byte = g_signal.current_byte | (1 << g_signal.bit);
 	g_signal.bit--;
 	if (g_signal.bit == -1)
@@ -38,17 +38,17 @@ static void	ft_process_signal_data(int sig, siginfo_t *info, void *other)
 
 int	main(void)
 {
-	struct sigaction	sa;
+	struct sigaction	signal_action;
 	int					pid;
 
 	pid = getpid();
 	g_signal.current_byte = 0;
 	g_signal.bit = 7;
-	ft_printf("PID : %d\n", pid);
-	sa.sa_flags = SA_SIGINFO;
-	sa.sa_sigaction = ft_process_signal_data;
-	if ((sigaction(SIGUSR1, &sa, NULL) == -1) \
-			|| (sigaction(SIGUSR2, &sa, NULL) == -1))
+	ft_printf("Server PID : %d\n", pid);
+	signal_action.sa_flags = SA_SIGINFO;
+	signal_action.sa_sigaction = handle_signal_data;
+	if ((sigaction(SIGUSR1, &signal_action, NULL) == -1) \
+			|| (sigaction(SIGUSR2, &signal_action, NULL) == -1))
 		print_error("Error in sigaction");
 	while (1)
 		pause();

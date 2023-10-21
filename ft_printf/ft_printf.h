@@ -6,7 +6,7 @@
 /*   By: jikarunw <jikarunw@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/16 01:40:14 by jikarunw          #+#    #+#             */
-/*   Updated: 2023/10/21 01:24:34 by jikarunw         ###   ########.fr       */
+/*   Updated: 2023/10/21 20:41:43 by jikarunw         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 # include <stdarg.h>
 # include <limits.h>
 # include <stdlib.h>
+# include <unistd.h>
 
 int		ft_printf(const char *s, ...);
 int		ft_printf_char(int c);

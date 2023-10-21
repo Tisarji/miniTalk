@@ -6,7 +6,7 @@
 /*   By: jikarunw <jikarunw@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/21 00:17:13 by jikarunw          #+#    #+#             */
-/*   Updated: 2023/10/21 01:00:34 by jikarunw         ###   ########.fr       */
+/*   Updated: 2023/10/21 15:18:32 by jikarunw         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,20 +14,20 @@
 
 volatile sig_atomic_t	g_response;
 
-void	ft_feedback_handle(int sig)
+void	handle_feedback_signal(int sig)
 {
 	if (sig == SIGUSR1)
 		g_response = 1;
 }
 
-void	ft_wait_for_feedback(void)
+void	wait_for_feedback(void)
 {
 	if (g_response == 0)
 		pause();
 	g_response = 0;
 }
 
-void	convert_char_to_bits(char c, int pid)
+void	send_char_bits(char c, int pid)
 {
 	int	i;
 
@@ -44,7 +44,7 @@ void	convert_char_to_bits(char c, int pid)
 			if (kill(pid, SIGUSR2) == -1)
 				print_error("Error in sending Signal");
 		}
-		ft_wait_for_feedback();
+		wait_for_feedback();
 		i--;
 	}
 }
@@ -66,9 +66,9 @@ int	main(int argc, char *argv[])
 	}
 	while (*str)
 	{
-		convert_char_to_bits(*str, server_pid);
+		send_char_bits(*str, server_pid);
 		str++;
 	}
-	convert_char_to_bits(server_pid, *str);
+	send_char_bits(server_pid, *str);
 	return (0);
 }
