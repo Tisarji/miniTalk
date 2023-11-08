@@ -6,17 +6,11 @@
 /*   By: jikarunw <jikarunw@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/21 00:27:39 by jikarunw          #+#    #+#             */
-/*   Updated: 2023/10/21 21:03:56 by jikarunw         ###   ########.fr       */
+/*   Updated: 2023/11/08 21:23:11 by jikarunw         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minitalk.h"
-
-void	print_error(char *str)
-{
-	printf("%s\n", str);
-	exit(1);
-}
 
 int	ft_atoi(const char *str)
 {
@@ -37,4 +31,27 @@ int	ft_atoi(const char *str)
 	while (str[i] >= '0' && str[i] <= '9')
 		res = res * 10 + (str[i++] - '0');
 	return (res * neg_digit);
+}
+void	*ft_memcpy(void *dst, const void *src, size_t n)
+{
+	unsigned char		*dst_char;
+	const unsigned char	*src_char;
+
+	if (!dst && !src)
+		return (NULL);
+	dst_char = (unsigned char *)dst;
+	src_char = (const unsigned char *)src;
+	while (n--)
+		*dst_char++ = *src_char++;
+	return (dst);
+}
+
+size_t	ft_strlen(const char *str)
+{
+	size_t	i;
+
+	i = 0;
+	while (str[i])
+		i++;
+	return (i);
 }
