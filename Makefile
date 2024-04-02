@@ -1,60 +1,66 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    Makefile                                           :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: jikarunw <jikarunw@student.42.fr>          +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2023/10/21 15:21:26 by jikarunw          #+#    #+#              #
-#    Updated: 2023/10/22 12:31:09 by jikarunw         ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
+# Colors
+COLOR_RESET = \033[0m
+COLOR_YELLOW = \033[1;33m
+COLOR_CYAN = \033[1;36m
+COLOR_RED = \033[91m
+COLOR_GREEN = \033[92m
+COLOR_PINK = \033[95m
 
+# Project Names
 NAME_SERVER = server
 NAME_CLIENT = client
 
-PRINTF = libftprintf.a
-FT_PRINTF_DIR = ft_printf
-INCLUDE = -I include
+RM = rm -rf
 
-CC = cc
+# Compiler and Flags
+CC = gcc
 CFLAGS = -Wall -Wextra -Werror
-RM = rm -f
 
-SRC_SERVER =	server.c \
-				ft_utils.c
+# Paths
+PATH_LIBFT = libft
+PATH_SRCS = srcs
+PATH_INCLUDES = includes
 
-SRC_CLIENT =	client.c \
-				ft_utils.c
+# Source Files
+SRC_SERVER = server.c
 
-OBJ_SERVER = $(SRC_SERVER:.c=.o)
-OBJ_CLIENT = $(SRC_CLIENT:.c=.o)
+SRC_CLIENT = client.c
 
-%.o: %.c minitalk.h
-	@$(CC) $(CFLAGS) -c $< -o $@
-	@echo "\033[32m[OK]\033[0m \033[36mCompiled:\033[0m $<"
+# Object Files
+OBJ_DIR = objs
+OBJ_SERVER = $(addprefix $(OBJ_DIR)/, $(SRC_SERVER:.c=.o))
+OBJ_CLIENT = $(addprefix $(OBJ_DIR)/, $(SRC_CLIENT:.c=.o))
 
+# Rules
 all: $(NAME_SERVER) $(NAME_CLIENT)
 
 $(NAME_SERVER): $(OBJ_SERVER)
-	@make -C $(FT_PRINTF_DIR)
-	@$(CC) $(CFLAGS) $(OBJ_SERVER) $(INCLUDE) $(FT_PRINTF_DIR)/$(PRINTF) -o $(NAME_SERVER)
-	@echo "\033[32m[OK]\033[0m \033[36mCreated:\033[0m $(NAME_SERVER)"
+	@make -C $(PATH_LIBFT)
+	@$(CC) $(CFLAGS) -o $(NAME_SERVER) $(OBJ_SERVER) -L$(PATH_LIBFT) -lft
+	@echo "[$(COLOR_YELLOW)$(NAME_SERVER) --> OK$(COLOR_RESET)]\n ${COLOR_GREEN}Success!${COLOR_RESET}"
+	@echo "$(COLOR_PINK)\tUsage: $(NAME_SERVER)$(COLOR_RESET)"
 
 $(NAME_CLIENT): $(OBJ_CLIENT)
-	@make -C $(FT_PRINTF_DIR)
-	@$(CC) $(CFLAGS) $(OBJ_CLIENT) $(INCLUDE) $(FT_PRINTF_DIR)/$(PRINTF) -o $(NAME_CLIENT)
-	@echo "\033[32m[OK]\033[0m \033[36mCreated:\033[0m $(NAME_CLIENT)"
+	@make -C $(PATH_LIBFT)
+	@$(CC) $(CFLAGS) -o $(NAME_CLIENT) $(OBJ_CLIENT) -L$(PATH_LIBFT) -lft
+	@echo "[$(COLOR_YELLOW)$(NAME_CLIENT) --> OK$(COLOR_RESET)]\n ${COLOR_GREEN}Success!${COLOR_RESET}"
+	@echo "$(COLOR_PINK)\tUsage: $(NAME_CLIENT)$(COLOR_RESET)"
+
+$(OBJ_DIR)/%.o: $(PATH_SRCS)/%.c
+	@mkdir -p $(OBJ_DIR)
+	@$(CC) $(CFLAGS) -c $< -o $@
+	@echo "$(COLOR_GREEN)Compiled:$(COLOR_RESET) $<"
 
 clean:
-	@make clean -C $(FT_PRINTF_DIR)
-	@$(RM) $(OBJ_SERVER) $(OBJ_CLIENT)
-	@echo "\033[32m[OK]\033[0m \033[31mCleaned:\033[0m \033[33m$(OBJ_SERVER) $(OBJ_CLIENT)\033[0m"
+	@make clean -C $(PATH_LIBFT)
+	@$(RM) $(OBJ_DIR)
+	@echo "$(COLOR_RED)Cleaned up object files$(COLOR_RESET)"
+	@$(RM) .DS_Store
 
 fclean: clean
-	@make fclean -C $(FT_PRINTF_DIR)
-	@$(RM) $(NAME_SERVER) $(NAME_CLIENT) $(OBJ_SERVER) $(OBJ_CLIENT)
-	@echo "\033[32m[OK]\033[0m \033[31mCleaned:\033[0m \033[33m$(NAME_SERVER) $(NAME_CLIENT) $(OBJ_SERVER) $(OBJ_CLIENT)\033[0m"
+	@make fclean -C $(PATH_LIBFT)
+	@$(RM) $(NAME_SERVER) $(NAME_CLIENT)
+	@echo "$(COLOR_RED)Cleaned up executables$(COLOR_RESET)"
 
 re: fclean all
 
