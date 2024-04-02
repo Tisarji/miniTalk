@@ -6,71 +6,87 @@
 /*   By: jikarunw <jikarunw@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/20 21:00:23 by jikarunw          #+#    #+#             */
-/*   Updated: 2024/03/31 17:08:55 by jikarunw         ###   ########.fr       */
+/*   Updated: 2024/04/02 14:03:08 by jikarunw         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/minitalk.h"
 
-char	*addchar(char *str, char chr, int *str_len)
+void	print_str(char **str, unsigned long long *i, siginfo_t *info)
 {
-	char	*out;
-
-	out = malloc(*str_len + 2);
-	if (!out)
-	{
-		ft_printf("server | Memory allocation failed.\n");
-		exit(1);
-	}
-	ft_memcpy(out, str, *str_len);
-	out[(*str_len)++] = chr;
-	out[*str_len] = '\0';
-	if (str)
-		free(str);
-	return (out);
+	ft_printf("%s", *str);
+	free(*str);
+	*str = NULL;
+	*i = 0;
+	kill(info->si_pid, SIGUSR2);
 }
 
-void	handle_sig_server(int sig, siginfo_t *info, void *uctx)
+char	*ft_realloc(char *str, int l, char c)
 {
-	static char	*str = NULL;
-	static int	str_len = 0;
-	static char	byte = 0b00000000;
-	static int	shift = 7;
+	char	*new_str;
+	int		i;
 
-	(void) uctx;
-	byte |= (sig - SIGUSR1) << shift--;
-	if (shift == -1)
+	new_str = (char *)malloc(sizeof(char) * (l + 2));
+	if (!new_str)
+		return (NULL);
+	i = 0;
+	if (str)
 	{
-		if (byte != 0)
-			str = addchar(str, byte, &str_len);
-		else
+		while (str[i])
 		{
-			str = addchar(str, '\n', &str_len);
-			write(1, str, str_len);
-			free(str);
-			str = NULL;
-			str_len = 0;
-			if (kill(info->si_pid, SIGUSR1) == -1)
-				ft_printf("server | Failed to send to the client.\n");
+			new_str[i] = str[i];
+			i++;
 		}
-		byte = 0b00000000;
-		shift = 7;
 	}
+	new_str[i] = c;
+	i++;
+	new_str[i] = '\0';
+	free(str);
+	return (new_str);
+}
+
+void	handler_signal(int signal, siginfo_t *info, void *context)
+{
+	static unsigned char		c = 0;
+	static int					bit = -1;
+	static unsigned long long	i = 0;
+	static char					*dest = NULL;
+
+	(void)context;
+	if (kill(info->si_pid, 0) < 0)
+		exit(EXIT_FAILURE);
+	if (bit < 0)
+		bit = __CHAR_BIT__ * sizeof(c) - 1;
+	if (signal == SIGUSR1)
+		c |= 1 << bit;
+	else if (signal == SIGUSR2)
+		c &= ~(1 << bit);
+	if (!bit && c)
+		dest = ft_realloc(dest, i++, c);
+	else if (!bit && !c)
+		print_str(&dest, &i, info);
+	bit--;
+	kill(info->si_pid, SIGUSR1);
 }
 
 int	main(void)
 {
-	struct sigaction	sa;
+	pid_t				pid;
+	struct sigaction	action;
+	sigset_t			signals;
 
-	ft_printf("server | PID: %d\n", getpid());
-	sa.sa_sigaction = handle_sig_server;
-	sigemptyset(&sa.sa_mask);
-	sigaddset(&sa.sa_mask, SIGUSR1);
-	sigaddset(&sa.sa_mask, SIGUSR2);
-	if (sigaction(SIGUSR1, &sa, NULL) < 0)
-		return (ft_printf("server | Failed adding signal handler.\n"));
-	if (sigaction(SIGUSR2, &sa, NULL) < 0)
-		return (ft_printf("server | Failed adding signal handler.\n"));
+	pid = getpid();
+	sigemptyset(&signals);
+	sigaddset(&signals, SIGUSR1);
+	sigaddset(&signals, SIGUSR2);
+	action.sa_flags = SA_SIGINFO;
+	action.sa_mask = signals;
+	action.sa_handler = NULL;
+	action.sa_sigaction = handler_signal;
+	sigaction(SIGUSR1, &action, NULL);
+	sigaction(SIGUSR2, &action, NULL);
+	ft_printf("PID server -> %d\n", pid);
 	while (1)
 		pause();
+	return (0);
 }

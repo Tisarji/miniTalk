@@ -6,63 +6,81 @@
 /*   By: jikarunw <jikarunw@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/10/21 00:17:13 by jikarunw          #+#    #+#             */
-/*   Updated: 2024/03/31 16:06:47 by jikarunw         ###   ########.fr       */
+/*   Updated: 2024/04/02 14:02:40 by jikarunw         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/minitalk.h"
 
-void	send(int pid, char *msg)
+int	g_bit_handler;
+
+void	validation_server(int signo)
 {
+	if (signo == SIGUSR2)
+		exit(EXIT_SUCCESS);
+	else if (signo == SIGUSR1)
+		g_bit_handler = 1;
+}
+
+int	check_av(int ac, char **av)
+{
+	int	pid;
 	int	i;
-	int	j;
-	int	sig;
-	int	msg_len;
 
-	i = 0;
-	msg_len = ft_strlen(msg);
-	while (i <= msg_len)
+	if (ac != 3 || !av[2][0])
 	{
-		j = -1;
-		while (++j < 8) {
-			sig = SIGUSR1;
-			if (msg[i] << j & 0b10000000)
-				sig = SIGUSR2;
-			if (kill(pid, sig))
-			{
-				ft_printf("Error sending signal. \n");
-				exit(EXIT_FAILURE);
-			}
-			usleep(100);
+		ft_putstr_fd("Error arguments, please try again.\n", 2);
+		exit(EXIT_FAILURE);
+	}
+	pid = ft_atoi(av[1]);
+	if (pid == -1)
+	{
+		ft_putstr_fd("Error: PID -1 is reserved for the kernel.\n", 2);
+		exit(EXIT_FAILURE);
+	}
+	i = -1;
+	while (av[1][++i])
+	{
+		if (!(ft_isdigit(av[1][i])) || pid < 0)
+		{
+			ft_putstr_fd("Error: a PID only has positive decimal numbers.", 2);
+			exit(EXIT_FAILURE);
 		}
-		i++;
+	}
+	return (pid);
+}
+
+void	send_bit(int pid, char c)
+{
+	int	bit;
+
+	bit = __CHAR_BIT__ * sizeof(c) - 1;
+	while (bit >= 0)
+	{
+		g_bit_handler = 0;
+		if (c & (1 << bit))
+			kill(pid, SIGUSR1);
+		else
+			kill(pid, SIGUSR2);
+		bit--;
+		while (g_bit_handler != 1)
+			usleep(100);
 	}
 }
 
-void	handle_sig_client(int sig)
+int	main(int ac, char **av)
 {
-	(void) sig;
-	ft_printf("client | Message sent.\n");
-	exit(0);
-}
+	int	pid;
+	int	i;
 
-int	main(int argc, char *argv[])
-{
-	if (argc != 3)
-	{
-		printf("client | Incorrect number of arguments.\n");
-		return (EXIT_FAILURE);
-	}
-	if (signal(SIGUSR1, handle_sig_client) == SIG_ERR)
-	{
-		printf("server | Failed adding signal handler.\n");
-		return (EXIT_SUCCESS);
-	}
-	send(ft_atoi(argv[1]), argv[2]);
-	if (sleep(ft_strlen(argv[2]) + 1) == 0)
-	{
-		printf("client | Message timed out.\n");
-		return (EXIT_SUCCESS);
-	}
-	return (EXIT_SUCCESS);
+	pid = check_av(ac, av);
+	i = -1;
+	signal(SIGUSR1, validation_server);
+	signal(SIGUSR2, validation_server);
+	while (av[2][++i])
+		send_bit(pid, av[2][i]);
+	send_bit(pid, '\n');
+	send_bit(pid, 0);
+	while (1)
+		pause();
 }
